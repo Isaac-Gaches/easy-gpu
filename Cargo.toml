@@ -1,0 +1,12 @@
+[package]
+name = "easy-gpu"
+version = "0.1.0"
+edition = "2024"
+description = "wgpu wrapper to manage assets and remove boilerplate"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/Isaac-Gaches/easy-gpu"
+
+[dependencies]
+wgpu = "29.0.1"
+winit = "0.30.13"
+bytemuck = "1.25.0"

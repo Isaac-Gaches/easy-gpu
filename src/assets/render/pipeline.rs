@@ -16,6 +16,8 @@ pub struct RenderPipelineBuilder<'a> {
     depth_writes_enabled: bool,
     material_entries: Vec<wgpu::BindGroupLayoutEntry>,
     blend: BlendState,
+    vs_entry: &'a str,
+    fs_entry: &'a str,
 }
 
 impl<'a> RenderPipelineBuilder<'a> {
@@ -29,6 +31,8 @@ impl<'a> RenderPipelineBuilder<'a> {
             depth_writes_enabled: true,
             material_entries: vec![],
             blend: BlendState::ALPHA_BLENDING,
+            vs_entry: "vs_main",
+            fs_entry: "fs_main",
         }
     }
     pub fn material_layout(
@@ -51,6 +55,16 @@ impl<'a> RenderPipelineBuilder<'a> {
 
     pub fn depth_writes_enabled(mut self, enabled: bool) -> Self {
         self.depth_writes_enabled = enabled;
+        self
+    }
+
+    pub fn vs_entry_point(mut self, entry: &'a str) -> Self{
+        self.vs_entry = entry;
+        self
+    }
+
+    pub fn fs_entry_point(mut self, entry: &'a str) -> Self{
+        self.fs_entry = entry;
         self
     }
     
@@ -100,13 +114,13 @@ impl<'a> RenderPipelineBuilder<'a> {
                 layout: Some(&pipeline_layout),
                 vertex: wgpu::VertexState {
                     module: shader,
-                    entry_point: Option::from("vs_main"),
+                    entry_point: Option::from(self.vs_entry),
                     compilation_options: Default::default(),
                     buffers: &self.vertex_layouts,
                 },
                 fragment: Some(wgpu::FragmentState {
                     module: shader,
-                    entry_point: Option::from("fs_main"),
+                    entry_point: Option::from(self.vs_entry),
                     compilation_options: Default::default(),
                     targets: &[Some(wgpu::ColorTargetState {
                         format: surface_config.format,

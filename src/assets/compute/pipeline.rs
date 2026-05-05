@@ -7,17 +7,23 @@ pub struct ComputePipeline{
     pub layout: BindGroupLayout,
 }
 
-pub struct ComputePipelineBuilder{
+pub struct ComputePipelineBuilder<'a>{
     shader: Handle<ShaderModule>,
     entries: Vec<wgpu::BindGroupLayoutEntry>,
+    entry_point: &'a str,
 }
 
-impl ComputePipelineBuilder{
+impl<'a> ComputePipelineBuilder<'a>{
     pub fn new(shader: Handle<ShaderModule>)->Self{
         Self{
             shader,
             entries: vec![],
+            entry_point: "cs_main"
         }
+    }
+    pub fn entry_point(mut self, entry_point: &'a str)->Self{
+        self.entry_point = entry_point;
+        self
     }
     pub fn bind_group_layout(
         mut self,
@@ -44,7 +50,7 @@ impl ComputePipelineBuilder{
             label: Some("Compute Pipeline"),
             layout: Some(&layout),
             module: asset_manager.shaders.get(self.shader).unwrap(),
-            entry_point: Some("cs_main"),
+            entry_point: Some(self.entry_point),
             compilation_options: Default::default(),
             cache: None,
         });

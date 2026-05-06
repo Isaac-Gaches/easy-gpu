@@ -22,6 +22,12 @@ pub struct TextureBuilder{
     format: TextureFormat,
     usage: TextureUsages,
 }
+impl Default for TextureBuilder {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl TextureBuilder{
     pub fn new()->Self{
         Self{
@@ -76,6 +82,12 @@ impl TextureBuilder{
 pub struct SamplerBuilder{
     mag_filter: FilterMode,
 }
+impl Default for SamplerBuilder {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl SamplerBuilder{
     pub fn new()-> Self{
         Self{

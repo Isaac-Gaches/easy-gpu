@@ -1,1 +1,1 @@
-pub use wgpu::{VertexFormat,VertexStepMode,TextureFormat,BlendState,FilterMode,TextureUsages};
+pub use wgpu::{VertexFormat,VertexStepMode,TextureFormat,BlendState,FilterMode,TextureUsages,Extent3d};

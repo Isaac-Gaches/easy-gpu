@@ -1,4 +1,4 @@
-use wgpu::{Extent3d, FilterMode, Sampler, TextureDimension, TextureFormat, TextureUsages};
+use wgpu::{Extent3d, FilterMode, TextureDimension, TextureFormat, TextureUsages};
 use crate::assets_manager::Handle;
 use crate::Renderer;
 
@@ -114,6 +114,10 @@ impl SamplerBuilder{
             anisotropy_clamp: 1,
             border_color: None,
         });
-        renderer.asset_manager.samplers.insert(sampler)
+        renderer.asset_manager.samplers.insert(Sampler{sampler})
     }
+}
+
+pub struct Sampler{
+    pub(crate) sampler: wgpu::Sampler
 }

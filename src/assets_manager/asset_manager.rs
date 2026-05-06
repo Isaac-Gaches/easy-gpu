@@ -1,4 +1,4 @@
-use wgpu::{Sampler, ShaderModule};
+use wgpu::{ShaderModule};
 use crate::assets::buffer::Buffer;
 use crate::assets::compute::bind_group::ComputeBindGroup;
 use crate::assets::compute::pipeline::ComputePipeline;
@@ -6,7 +6,7 @@ use crate::assets_manager::arena::Arena;
 use crate::assets::render::material::Material;
 use crate::assets::render::mesh::Mesh;
 use crate::assets::render::pipeline::RenderPipeline;
-use crate::assets::texture::{Texture};
+use crate::assets::texture::{Sampler, Texture};
 
 
 pub struct AssetManager{

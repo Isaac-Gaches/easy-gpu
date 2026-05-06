@@ -23,7 +23,7 @@ impl ComputeBindGroupBuilder{
         }
     }
 
-    pub fn storage_texture(
+    pub fn texture(
         mut self,
         texture_binding: u32,
         texture: Handle<Texture>,

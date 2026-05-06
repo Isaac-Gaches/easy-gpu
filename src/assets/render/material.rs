@@ -1,8 +1,7 @@
-use wgpu::Sampler;
 use crate::assets::buffer::Buffer;
 use crate::assets_manager::handle::Handle;
 use crate::assets::render::pipeline::RenderPipeline;
-use crate::assets::texture::Texture;
+use crate::assets::texture::{Sampler, Texture};
 use crate::Renderer;
 
 pub struct Material {
@@ -81,7 +80,7 @@ impl MaterialBuilder {
             let sampler = renderer.asset_manager.samplers.get(*handle).unwrap();
             entries.push(wgpu::BindGroupEntry {
                 binding:*binding,
-                resource: wgpu::BindingResource::Sampler(sampler),
+                resource: wgpu::BindingResource::Sampler(&sampler.sampler),
             });
         }
 

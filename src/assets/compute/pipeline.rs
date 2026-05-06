@@ -88,7 +88,7 @@ pub fn storage_texture(binding: u32) -> wgpu::BindGroupLayoutEntry {
     }
 }
 
-/*pub fn texture(binding: u32) -> wgpu::BindGroupLayoutEntry {
+pub fn compute_texture(binding: u32) -> wgpu::BindGroupLayoutEntry {
     wgpu::BindGroupLayoutEntry {
         binding,
         visibility: wgpu::ShaderStages::COMPUTE,
@@ -99,5 +99,5 @@ pub fn storage_texture(binding: u32) -> wgpu::BindGroupLayoutEntry {
         },
         count: None,
     }
-}*/
+}
 

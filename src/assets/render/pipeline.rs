@@ -155,7 +155,7 @@ impl<'a> RenderPipelineBuilder<'a> {
     }
 }
 
-pub fn texture(binding: u32) -> wgpu::BindGroupLayoutEntry {
+pub fn render_texture(binding: u32) -> wgpu::BindGroupLayoutEntry {
     wgpu::BindGroupLayoutEntry {
         binding,
         visibility: wgpu::ShaderStages::FRAGMENT,

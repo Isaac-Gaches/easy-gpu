@@ -184,6 +184,13 @@ impl Renderer {
         self.surface_config.width as f32 / self.surface_config.height as f32
     }
 
+    pub fn width(&self) -> u32{
+        self.surface_config.width
+    }
+    pub fn height(&self) -> u32{
+        self.surface_config.height
+    }
+
     pub fn begin_frame(&mut self) -> &mut Frame {
         self.frame.clear();
         &mut self.frame

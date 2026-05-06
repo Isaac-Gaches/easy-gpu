@@ -1,5 +1,4 @@
 use std::ops::Range;
-use wgpu::{Device, Queue};
 use crate::assets::buffer::Buffer;
 use crate::assets::compute::bind_group::ComputeBindGroup;
 use crate::assets::compute::pipeline::ComputePipeline;

@@ -6,6 +6,12 @@ pub struct BufferLayout {
     step_mode: VertexStepMode,
 }
 
+impl Default for BufferLayout {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl BufferLayout{
     pub fn new()->Self{
         Self{

@@ -4,4 +4,3 @@ pub(crate) mod task;
 
 pub use pipeline::*;
 pub use bind_group::*;
-pub use task::*;

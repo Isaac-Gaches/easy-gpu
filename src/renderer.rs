@@ -1,29 +1,28 @@
 use std::sync::Arc;
-use wgpu::{BufferUsages, Device, Queue, ShaderModule, StoreOp, Surface, SurfaceConfiguration};
+use image::GenericImageView;
+use wgpu::{BufferUsages, Device, Queue, ShaderModule, StoreOp, Surface, SurfaceConfiguration, TextureDimension};
 use winit::dpi::PhysicalSize;
 use winit::window::Window;
 use crate::{frame::Frame};
 use crate::assets::buffer::Buffer;
-use crate::assets::compute::bind_group::{ComputeBindGroup, ComputeBindGroupBuilder};
-use crate::assets::compute::pipeline::{ComputePipeline, ComputePipelineBuilder};
-use crate::assets::render::material::{Material, MaterialBuilder};
 use crate::assets::render::mesh::Mesh;
-use crate::assets::render::pipeline::{RenderPipeline, RenderPipelineBuilder};
+use crate::assets::Texture;
 use crate::assets::vertex_layout::GpuVertex;
 use crate::assets_manager::asset_manager::AssetManager;
 use crate::assets_manager::asset_registry::AssetRegistry;
 use crate::assets_manager::handle::Handle;
+use crate::wgpu::TextureFormat;
 
 pub struct Renderer {
-    device: Device,
+    pub(crate) device: Device,
     queue: Queue,
     surface: Surface<'static>,
-    surface_config: SurfaceConfiguration,
+    pub(crate)surface_config: SurfaceConfiguration,
 
     pub asset_registry: AssetRegistry,
     pub asset_manager: AssetManager,
 
-    depth_texture: Option<wgpu::Texture>,
+    pub(crate)depth_texture: Option<wgpu::Texture>,
     depth_view: Option<wgpu::TextureView>,
 
     frame: Frame,
@@ -140,19 +139,14 @@ impl Renderer {
                         store: wgpu::StoreOp::Store,
                     },
                 })],
-                depth_stencil_attachment: match &self.depth_view{
-                    Some(view) => {
-                        Some(wgpu::RenderPassDepthStencilAttachment {
+                depth_stencil_attachment: self.depth_view.as_ref().map(|view| wgpu::RenderPassDepthStencilAttachment {
                             view,
                             depth_ops: Some(wgpu::Operations {
                                 load: wgpu::LoadOp::Clear(1.0),
                                 store: StoreOp::Store,
                             }),
                             stencil_ops: None,
-                        })
-                    }
-                    None => None
-                } ,
+                        }) ,
                 occlusion_query_set: None,
                 timestamp_writes: None,
                 multiview_mask: None,
@@ -204,16 +198,7 @@ impl Renderer {
         self.asset_manager.meshes.insert(mesh)
     }
 
-    pub fn create_render_pipeline(&mut self, builder: RenderPipelineBuilder) -> Handle<RenderPipeline> {
-        if builder.depth_format.is_some() && self.depth_texture.is_none() {
-            self.create_depth_texture(self.surface_config.width,self.surface_config.height);
-        }
-
-        let pipeline = builder.build(&self.device,&self.asset_manager,&self.surface_config);
-        self.asset_manager.render_pipelines.insert(pipeline)
-    }
-
-    fn create_depth_texture(&mut self, width: u32, height: u32){
+    pub(crate) fn create_depth_texture(&mut self, width: u32, height: u32){
         let texture = self.device.create_texture(&wgpu::TextureDescriptor {
             size: wgpu::Extent3d {
                 width,
@@ -235,10 +220,6 @@ impl Renderer {
         self.depth_texture = Some(texture);
     }
 
-    pub fn create_material(&mut self,builder: MaterialBuilder) -> Handle<Material> {
-        let material = builder.build(&self.device,&self.asset_manager);
-        self.asset_manager.materials.insert(material)
-    }
 
     pub fn create_buffer(&mut self,buffer_usages: BufferUsages,size:u64) -> Handle<Buffer> {
         let buffer = Buffer::new(&self.device,size,buffer_usages);
@@ -262,16 +243,48 @@ impl Renderer {
         let uniform = self.asset_manager.buffers.get(handle).unwrap();
         self.queue.write_buffer(&uniform.buffer, 0, bytemuck::cast_slice(&[data]));
     }
+    pub fn load_texture_from_file(&mut self,texture_bytes: Vec<u8>) -> Handle<Texture> {
+        let image = image::load_from_memory(texture_bytes.as_slice()).unwrap();
+        let rgba = image.to_rgba8();
 
-    pub fn create_compute_pipeline(&mut self,builder: ComputePipelineBuilder) -> Handle<ComputePipeline>{
-        let pipeline = builder.build(&self.device,&self.asset_manager);
-        self.asset_manager.compute_pipelines.insert(pipeline)
+        let dims = image.dimensions();
+
+        let texture_size = wgpu::Extent3d{
+            width: dims.0,
+            height: dims.1,
+            depth_or_array_layers: 1,
+        };
+
+        let texture = self.device.create_texture(&wgpu::TextureDescriptor{
+            label: None,
+            size: texture_size,
+            mip_level_count: 1,
+            sample_count: 1,
+            dimension: TextureDimension::D2,
+            format: TextureFormat::Rgba8UnormSrgb,
+            usage: wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST,
+            view_formats: &[],
+        });
+
+        self.queue.write_texture(
+            wgpu::TexelCopyTextureInfo{
+                texture: &texture,
+                mip_level: 0,
+                origin: wgpu::Origin3d::ZERO,
+                aspect: wgpu::TextureAspect::All,
+            },
+            &rgba,
+            wgpu::TexelCopyBufferLayout{
+                offset: 0,
+                bytes_per_row: Some(4 * dims.0),
+                rows_per_image: Some(dims.1),
+            },
+            texture_size
+        );
+
+        let view = texture.create_view(&wgpu::TextureViewDescriptor::default());
+
+        self.asset_manager.textures.insert(Texture::new(texture,view))
     }
-
-    pub fn create_compute_bind_group(&mut self, builder: ComputeBindGroupBuilder) -> Handle<ComputeBindGroup>{
-        let bind_group = builder.build(&self.device,&self.asset_manager);
-        self.asset_manager.compute_bind_groups.insert(bind_group)
-    }
-
 }
 

@@ -40,25 +40,25 @@ impl ComputeBindGroupBuilder{
         self
     }
 
-    pub fn build(self,renderer: &mut Renderer) -> Handle<ComputeBindGroup> {
+    pub fn build(&self,renderer: &mut Renderer) -> Handle<ComputeBindGroup> {
         let pipeline = renderer.asset_manager.compute_pipelines.get(self.pipeline).unwrap();
 
         let mut entries = Vec::new();
 
-        for (binding,handle) in self.storages {
-            let storage = renderer.asset_manager.buffers.get(handle).unwrap();
+        for (binding,handle) in &self.storages {
+            let storage = renderer.asset_manager.buffers.get(*handle).unwrap();
 
             entries.push(wgpu::BindGroupEntry {
-                binding,
+                binding:*binding,
                 resource: storage.buffer.as_entire_binding(),
             });
         }
 
-        for (tex_binding,handle) in self.textures {
-            let texture = renderer.asset_manager.textures.get(handle).unwrap();
+        for (tex_binding,handle) in &self.textures {
+            let texture = renderer.asset_manager.textures.get(*handle).unwrap();
 
             entries.push(wgpu::BindGroupEntry {
-                binding: tex_binding,
+                binding: *tex_binding,
                 resource: wgpu::BindingResource::TextureView(&texture.view),
             });
         }

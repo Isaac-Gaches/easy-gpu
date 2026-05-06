@@ -56,7 +56,7 @@ impl TextureBuilder{
         self
     }
 
-    pub fn build(self,renderer: &mut Renderer) -> Handle<Texture>{
+    pub fn build(&self,renderer: &mut Renderer) -> Handle<Texture>{
         let tex = renderer.device.create_texture(&wgpu::TextureDescriptor{
             label: Some("texture"),
             size: self.size,
@@ -87,7 +87,7 @@ impl SamplerBuilder{
         self.mag_filter = filter_mode;
         self
     }
-    pub fn build(self,renderer: &mut Renderer) -> Handle<Sampler>{
+    pub fn build(&self,renderer: &mut Renderer) -> Handle<Sampler>{
         let sampler = renderer.device.create_sampler(&wgpu::SamplerDescriptor{
             label: Some("sampler"),
             address_mode_u: Default::default(),

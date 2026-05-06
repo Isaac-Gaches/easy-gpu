@@ -56,31 +56,31 @@ impl MaterialBuilder {
         self
     }
 
-    pub fn build(self,renderer: &mut Renderer) -> Handle<Material> {
+    pub fn build(&self,renderer: &mut Renderer) -> Handle<Material> {
         let pipeline = renderer.asset_manager.render_pipelines.get(self.pipeline).unwrap();
 
         let mut entries = Vec::new();
 
-        for (binding,handle) in self.uniforms {
-            let uniform = renderer.asset_manager.buffers.get(handle).unwrap();
+        for (binding,handle) in &self.uniforms {
+            let uniform = renderer.asset_manager.buffers.get(*handle).unwrap();
             entries.push(wgpu::BindGroupEntry {
-                binding,
+                binding:*binding,
                 resource: uniform.buffer.as_entire_binding(),
             });
         }
 
-        for (binding,handle) in self.textures {
-            let texture = renderer.asset_manager.textures.get(handle).unwrap();
+        for (binding,handle) in &self.textures {
+            let texture = renderer.asset_manager.textures.get(*handle).unwrap();
             entries.push(wgpu::BindGroupEntry {
-                 binding,
+                 binding:*binding,
                  resource: wgpu::BindingResource::TextureView(&texture.view),
             });
 
         }
-        for (binding,handle) in self.samplers{
-            let sampler = renderer.asset_manager.samplers.get(handle).unwrap();
+        for (binding,handle) in &self.samplers{
+            let sampler = renderer.asset_manager.samplers.get(*handle).unwrap();
             entries.push(wgpu::BindGroupEntry {
-                binding,
+                binding:*binding,
                 resource: wgpu::BindingResource::Sampler(sampler),
             });
         }

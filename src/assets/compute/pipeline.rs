@@ -88,12 +88,24 @@ pub fn storage_texture(binding: u32) -> wgpu::BindGroupLayoutEntry {
     }
 }
 
-pub fn compute_texture(binding: u32) -> wgpu::BindGroupLayoutEntry {
+pub fn compute_texture_float(binding: u32) -> wgpu::BindGroupLayoutEntry {
     wgpu::BindGroupLayoutEntry {
         binding,
         visibility: wgpu::ShaderStages::COMPUTE,
         ty: wgpu::BindingType::Texture {
             sample_type: wgpu::TextureSampleType::Float { filterable: true },
+            view_dimension: TextureViewDimension::D2,
+            multisampled: false,
+        },
+        count: None,
+    }
+}
+pub fn compute_texture_uint(binding: u32) -> wgpu::BindGroupLayoutEntry {
+    wgpu::BindGroupLayoutEntry {
+        binding,
+        visibility: wgpu::ShaderStages::COMPUTE,
+        ty: wgpu::BindingType::Texture {
+            sample_type: wgpu::TextureSampleType::Uint,
             view_dimension: TextureViewDimension::D2,
             multisampled: false,
         },

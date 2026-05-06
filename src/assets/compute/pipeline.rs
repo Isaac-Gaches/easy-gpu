@@ -1,6 +1,6 @@
-use wgpu::{BindGroupLayout, BufferBindingType, ComputePipelineDescriptor, Device, ShaderModule, StorageTextureAccess, TextureFormat, TextureViewDimension};
-use crate::assets_manager::asset_manager::AssetManager;
+use wgpu::{BindGroupLayout, BufferBindingType, ComputePipelineDescriptor, ShaderModule, StorageTextureAccess, TextureFormat, TextureViewDimension};
 use crate::assets_manager::Handle;
+use crate::Renderer;
 
 pub struct ComputePipeline{
     pub pipeline: wgpu::ComputePipeline,
@@ -32,24 +32,24 @@ impl<'a> ComputePipelineBuilder<'a>{
         self.entries = entries.to_vec();
         self
     }
-    pub(crate) fn build(self,device: &Device,asset_manager: &AssetManager) -> ComputePipeline{
-        let bind_group_layout = device.create_bind_group_layout(
+    pub(crate) fn build(self,renderer: &mut Renderer) -> ComputePipeline{
+        let bind_group_layout = renderer.device.create_bind_group_layout(
             &wgpu::BindGroupLayoutDescriptor {
                 label: Some("material layout"),
                 entries: &self.entries,
             }
         );
         
-        let layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor{
+        let layout = renderer.device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor{
             label: None,
             bind_group_layouts: &[Some(&bind_group_layout)],
             immediate_size: 0,
         });
 
-        let pipeline = device.create_compute_pipeline(&ComputePipelineDescriptor{
+        let pipeline = renderer.device.create_compute_pipeline(&ComputePipelineDescriptor{
             label: Some("Compute Pipeline"),
             layout: Some(&layout),
-            module: asset_manager.shaders.get(self.shader).unwrap(),
+            module: renderer.asset_manager.shaders.get(self.shader).unwrap(),
             entry_point: Some(self.entry_point),
             compilation_options: Default::default(),
             cache: None,

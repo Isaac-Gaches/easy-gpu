@@ -1,8 +1,8 @@
-use wgpu::{BlendState, BufferBindingType, Device, SurfaceConfiguration};
+use wgpu::{BlendState, BufferBindingType};
 use wgpu::ShaderModule;
 use crate::assets::vertex_layout::BufferLayout;
-use crate::assets_manager::asset_manager::AssetManager;
 use crate::assets_manager::handle::Handle;
+use crate::Renderer;
 
 pub struct RenderPipeline {
     pub pipeline: wgpu::RenderPipeline,
@@ -88,17 +88,21 @@ impl<'a> RenderPipelineBuilder<'a> {
         self
     }
 
-    pub fn build(self,device: &Device,asset_manager: &AssetManager,surface_config: &SurfaceConfiguration) -> RenderPipeline {
-        let shader = asset_manager.shaders.get(self.shader).unwrap();
+    pub fn build(self,renderer: &mut Renderer) -> RenderPipeline {
+        if self.depth_format.is_some() && renderer.depth_texture.is_none() {
+            renderer.create_depth_texture(renderer.surface_config.width,renderer.surface_config.height);
+        }
 
-        let material_layout = device.create_bind_group_layout(
+        let shader = renderer.asset_manager.shaders.get(self.shader).unwrap();
+
+        let material_layout = renderer.device.create_bind_group_layout(
             &wgpu::BindGroupLayoutDescriptor {
                 label: Some("material layout"),
                 entries: &self.material_entries,
             }
         );
 
-        let pipeline_layout = device.create_pipeline_layout(
+        let pipeline_layout = renderer.device.create_pipeline_layout(
             &wgpu::PipelineLayoutDescriptor {
                 label: Some("pipeline layout"),
                 bind_group_layouts: &[
@@ -108,7 +112,7 @@ impl<'a> RenderPipelineBuilder<'a> {
             }
         );
 
-        let pipeline = device.create_render_pipeline(
+        let pipeline = renderer.device.create_render_pipeline(
             &wgpu::RenderPipelineDescriptor {
                 label: Some("pipeline"),
                 layout: Some(&pipeline_layout),
@@ -123,7 +127,7 @@ impl<'a> RenderPipelineBuilder<'a> {
                     entry_point: Option::from(self.vs_entry),
                     compilation_options: Default::default(),
                     targets: &[Some(wgpu::ColorTargetState {
-                        format: surface_config.format,
+                        format: renderer.surface_config.format,
                         blend: Some(self.blend),
                         write_mask: wgpu::ColorWrites::ALL,
                     })],

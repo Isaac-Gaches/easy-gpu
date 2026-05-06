@@ -1,9 +1,8 @@
-use wgpu::Device;
 use crate::assets::compute::pipeline::ComputePipeline;
 use crate::assets::{Texture};
 use crate::assets::buffer::Buffer;
-use crate::assets_manager::asset_manager::AssetManager;
 use crate::assets_manager::Handle;
+use crate::Renderer;
 
 pub struct ComputeBindGroup{
     pub bind_group: wgpu::BindGroup
@@ -41,13 +40,13 @@ impl ComputeBindGroupBuilder{
         self
     }
 
-    pub fn build(self,device:&Device, asset_manager: &AssetManager) -> ComputeBindGroup {
-        let pipeline = asset_manager.compute_pipelines.get(self.pipeline.clone()).unwrap();
+    pub fn build(self,renderer: &mut Renderer) -> ComputeBindGroup {
+        let pipeline = renderer.asset_manager.compute_pipelines.get(self.pipeline).unwrap();
 
         let mut entries = Vec::new();
 
         for (binding,handle) in self.storages {
-            let storage = asset_manager.buffers.get(handle).unwrap();
+            let storage = renderer.asset_manager.buffers.get(handle).unwrap();
 
             entries.push(wgpu::BindGroupEntry {
                 binding,
@@ -56,7 +55,7 @@ impl ComputeBindGroupBuilder{
         }
 
         for (tex_binding,handle) in self.textures {
-            let texture = asset_manager.textures.get(handle).unwrap();
+            let texture = renderer.asset_manager.textures.get(handle).unwrap();
 
             entries.push(wgpu::BindGroupEntry {
                 binding: tex_binding,
@@ -64,7 +63,7 @@ impl ComputeBindGroupBuilder{
             });
         }
 
-        let bind_group = device.create_bind_group(
+        let bind_group = renderer.device.create_bind_group(
             &wgpu::BindGroupDescriptor {
                 label: Some("material bind group"),
                 layout: &pipeline.layout,

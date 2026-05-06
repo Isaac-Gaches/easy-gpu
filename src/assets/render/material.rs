@@ -56,7 +56,7 @@ impl MaterialBuilder {
         self
     }
 
-    pub fn build(self,renderer: &mut Renderer) -> Material {
+    pub fn build(self,renderer: &mut Renderer) -> Handle<Material> {
         let pipeline = renderer.asset_manager.render_pipelines.get(self.pipeline).unwrap();
 
         let mut entries = Vec::new();
@@ -93,9 +93,9 @@ impl MaterialBuilder {
             }
         );
 
-        Material {
+        renderer.asset_manager.materials.insert(Material {
             bind_group,
             pipeline: self.pipeline,
-        }
+        })
     }
 }

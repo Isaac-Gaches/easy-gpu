@@ -88,7 +88,7 @@ impl<'a> RenderPipelineBuilder<'a> {
         self
     }
 
-    pub fn build(self,renderer: &mut Renderer) -> RenderPipeline {
+    pub fn build(self,renderer: &mut Renderer) -> Handle<RenderPipeline> {
         if self.depth_format.is_some() && renderer.depth_texture.is_none() {
             renderer.create_depth_texture(renderer.surface_config.width,renderer.surface_config.height);
         }
@@ -148,7 +148,10 @@ impl<'a> RenderPipelineBuilder<'a> {
             }
         );
 
-        RenderPipeline { pipeline, material_layout }
+        renderer.asset_manager.render_pipelines.insert(RenderPipeline{
+            pipeline,
+            material_layout,
+        })
     }
 }
 

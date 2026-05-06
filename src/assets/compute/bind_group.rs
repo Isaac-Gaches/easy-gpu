@@ -40,7 +40,7 @@ impl ComputeBindGroupBuilder{
         self
     }
 
-    pub fn build(self,renderer: &mut Renderer) -> ComputeBindGroup {
+    pub fn build(self,renderer: &mut Renderer) -> Handle<ComputeBindGroup> {
         let pipeline = renderer.asset_manager.compute_pipelines.get(self.pipeline).unwrap();
 
         let mut entries = Vec::new();
@@ -71,8 +71,8 @@ impl ComputeBindGroupBuilder{
             }
         );
 
-        ComputeBindGroup{
+        renderer.asset_manager.compute_bind_groups.insert(ComputeBindGroup{
             bind_group,
-        }
+        })
     }
 }

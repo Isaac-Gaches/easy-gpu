@@ -35,7 +35,7 @@ impl<'a> ComputePipelineBuilder<'a>{
     pub fn build(&self,renderer: &mut Renderer) -> Handle<ComputePipeline>{
         let bind_group_layout = renderer.device.create_bind_group_layout(
             &wgpu::BindGroupLayoutDescriptor {
-                label: Some("material layout"),
+                label: Some("bind group layout"),
                 entries: &self.entries,
             }
         );

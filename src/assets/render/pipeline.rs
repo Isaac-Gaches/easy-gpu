@@ -124,7 +124,7 @@ impl<'a> RenderPipelineBuilder<'a> {
                 },
                 fragment: Some(wgpu::FragmentState {
                     module: shader,
-                    entry_point: Option::from(self.vs_entry),
+                    entry_point: Option::from(self.fs_entry),
                     compilation_options: Default::default(),
                     targets: &[Some(wgpu::ColorTargetState {
                         format: renderer.surface_config.format,

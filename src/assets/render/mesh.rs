@@ -12,7 +12,7 @@ impl Mesh {
     pub fn new<T: GpuVertex>(
         device: &Device,
         vertices: &[T],
-        indices: &[u32],
+        indices: &[u16],
     ) -> Self {
         let vertex_buffer = device.create_buffer_init(
             &wgpu::util::BufferInitDescriptor {

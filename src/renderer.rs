@@ -162,7 +162,7 @@ impl Renderer {
                 render_pass.set_bind_group(0, &material.bind_group, &[]);
                 render_pass.set_vertex_buffer(0, mesh.vertex_buffer.slice(..));
                 render_pass.set_vertex_buffer(1, instances.buffer.slice(..));
-                render_pass.set_index_buffer(mesh.index_buffer.slice(..), wgpu::IndexFormat::Uint32);
+                render_pass.set_index_buffer(mesh.index_buffer.slice(..), wgpu::IndexFormat::Uint16);
 
                 render_pass.draw_indexed(0..mesh.index_count, 0,item.range.clone());
             }
@@ -193,7 +193,7 @@ impl Renderer {
         &mut self.frame
     }
 
-    pub fn create_mesh<T: GpuVertex>(&mut self, vertices: &[T],indices: &[u32]) -> Handle<Mesh>{
+    pub fn create_mesh<T: GpuVertex>(&mut self, vertices: &[T],indices: &[u16]) -> Handle<Mesh>{
         let mesh = Mesh::new(&self.device,vertices,indices);
         self.asset_manager.meshes.insert(mesh)
     }

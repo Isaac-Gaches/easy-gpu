@@ -181,15 +181,25 @@ impl Renderer {
                 multiview_mask: None,
             });
 
-            for item in &self.frame.render_tasks {
-                let material = self.asset_manager.materials.get(item.material).unwrap();
-                let pipeline = self.asset_manager.render_pipelines.get(material.pipeline).unwrap();
-                let mesh = self.asset_manager.meshes.get(item.mesh).unwrap();
+            let mut current_material = None;
+            let mut current_mesh = None;
 
-                render_pass.set_pipeline(&pipeline.pipeline);
-                render_pass.set_bind_group(0, &material.bind_group, &[]);
-                render_pass.set_vertex_buffer(0, mesh.vertex_buffer.slice(..));
-                render_pass.set_index_buffer(mesh.index_buffer.slice(..), wgpu::IndexFormat::Uint16);
+            for item in &self.frame.render_tasks {
+                if Some(item.material) != current_material{
+                    current_material = Some(item.material);
+                    let material = self.asset_manager.materials.get(item.material).unwrap();
+                    let pipeline = self.asset_manager.render_pipelines.get(material.pipeline).unwrap();
+
+                    render_pass.set_pipeline(&pipeline.pipeline);
+                    render_pass.set_bind_group(0, &material.bind_group, &[]);
+                }
+
+                let mesh = self.asset_manager.meshes.get(item.mesh).unwrap();
+                if Some(item.mesh) != current_mesh{
+                    current_mesh = Some(item.mesh);
+                    render_pass.set_vertex_buffer(0, mesh.vertex_buffer.slice(..));
+                    render_pass.set_index_buffer(mesh.index_buffer.slice(..), wgpu::IndexFormat::Uint16);
+                }
 
                 if let Some(instances) = item.instances{
                     let instances = self.asset_manager.buffers.get(instances).unwrap();

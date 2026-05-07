@@ -1,4 +1,4 @@
-#[derive( Debug, PartialEq, Eq, Hash)]
+#[derive(Debug, Hash,Eq)]
 pub struct Handle<T> {
     pub index: u32,
     pub generation: u32,
@@ -12,3 +12,11 @@ impl<T> Clone for Handle<T> {
         *self
     }
 }
+
+impl<T> PartialEq for Handle<T> {
+    fn eq(&self, other: &Self) -> bool {
+        self.index == other.index &&
+        self.generation == other.generation
+    }
+}
+

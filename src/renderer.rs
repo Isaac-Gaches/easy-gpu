@@ -156,15 +156,22 @@ impl Renderer {
                 let material = self.asset_manager.materials.get(item.material).unwrap();
                 let pipeline = self.asset_manager.render_pipelines.get(material.pipeline).unwrap();
                 let mesh = self.asset_manager.meshes.get(item.mesh).unwrap();
-                let instances = self.asset_manager.buffers.get(item.instances).unwrap();
 
                 render_pass.set_pipeline(&pipeline.pipeline);
                 render_pass.set_bind_group(0, &material.bind_group, &[]);
                 render_pass.set_vertex_buffer(0, mesh.vertex_buffer.slice(..));
-                render_pass.set_vertex_buffer(1, instances.buffer.slice(..));
                 render_pass.set_index_buffer(mesh.index_buffer.slice(..), wgpu::IndexFormat::Uint16);
 
-                render_pass.draw_indexed(0..mesh.index_count, 0,item.range.clone());
+                if let Some(instances) = item.instances{
+                    let instances = self.asset_manager.buffers.get(instances).unwrap();
+                    render_pass.set_vertex_buffer(1, instances.buffer.slice(..));
+                    render_pass.draw_indexed(0..mesh.index_count, 0,item.range.clone());
+                }
+                else{
+                    render_pass.draw_indexed(0..mesh.index_count, 0,0..1);
+                }
+
+
             }
         }
 

@@ -24,6 +24,8 @@ pub struct Renderer {
     depth_view: Option<wgpu::TextureView>,
 
     frame: Frame,
+
+    textures_to_clear: Vec<Handle<Texture>>,
 }
 
 impl Renderer {
@@ -71,10 +73,11 @@ impl Renderer {
             depth_texture: None,
             depth_view: None,
             frame,
+            textures_to_clear: vec![],
         }
     }
 
-    pub fn render(&self) {
+    pub fn render(&mut self) {
         let output = match self.surface.get_current_texture() {
             wgpu::CurrentSurfaceTexture::Success(frame) => frame,
             wgpu::CurrentSurfaceTexture::Suboptimal(frame) => {
@@ -113,6 +116,32 @@ impl Renderer {
             },
         );
 
+        for texture in self.textures_to_clear.drain(..){
+            let view = &self.asset_manager.textures.get(texture).unwrap().view;
+
+            let _rpass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+                label: Some("Clear Texture Pass"),
+                color_attachments: &[Some(wgpu::RenderPassColorAttachment {
+                    view,
+                    depth_slice: None,
+                    resolve_target: None,
+                    ops: wgpu::Operations {
+                        load: wgpu::LoadOp::Clear(wgpu::Color {
+                            r: 0.0,
+                            g: 0.0,
+                            b: 0.0,
+                            a: 1.0,
+                        }),
+                        store: Default::default(),
+                    },
+                })],
+                depth_stencil_attachment: None,
+                timestamp_writes: None,
+                occlusion_query_set: None,
+                multiview_mask: None,
+            });
+        }
+
         for compute_task in &self.frame.compute_tasks{
             compute_task.execute(&mut encoder, &self.asset_manager)
         }
@@ -136,13 +165,13 @@ impl Renderer {
                     },
                 })],
                 depth_stencil_attachment: self.depth_view.as_ref().map(|view| wgpu::RenderPassDepthStencilAttachment {
-                            view,
-                            depth_ops: Some(wgpu::Operations {
-                                load: wgpu::LoadOp::Clear(1.0),
-                                store: StoreOp::Store,
-                            }),
-                            stencil_ops: None,
-                        }) ,
+                    view,
+                    depth_ops: Some(wgpu::Operations {
+                        load: wgpu::LoadOp::Clear(1.0),
+                        store: StoreOp::Store,
+                    }),
+                    stencil_ops: None,
+                }) ,
                 occlusion_query_set: None,
                 timestamp_writes: None,
                 multiview_mask: None,
@@ -315,6 +344,10 @@ impl Renderer {
             },
             texture_size
         );
+    }
+
+    pub fn clear_texture(&mut self, texture: Handle<Texture>){
+        self.textures_to_clear.push(texture);
     }
 }
 

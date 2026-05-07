@@ -10,12 +10,12 @@ use crate::assets::render::mesh::Mesh;
 pub(crate) struct RenderItem {
     pub mesh: Handle<Mesh>,
     pub material: Handle<Material>,
-    pub instances: Handle<Buffer>,
-    pub range: Range<u32>
+    pub instances: Option<Handle<Buffer>>,
+    pub range: Option<Range<u32>>
 }
 
 impl RenderItem {
-    fn new(mesh: Handle<Mesh>, material: Handle<Material>,instances: Handle<Buffer>,range: Range<u32>) -> Self {
+    fn new(mesh: Handle<Mesh>, material: Handle<Material>,instances: Option<Handle<Buffer>>,range: Option<Range<u32>>) -> Self {
         Self{
             mesh,
             material,
@@ -27,9 +27,7 @@ impl RenderItem {
 
 pub struct Frame {
     pub(crate) render_tasks: Vec<RenderItem>,
-  //  pub(crate) instance_buffer: InstanceBuffer,
     pub(crate) compute_tasks: Vec<ComputeTask>,
-  //  instances: Vec<Instance>
 }
 
 impl Frame {
@@ -45,8 +43,13 @@ impl Frame {
         self.compute_tasks.clear();
     }
 
-    pub fn draw(&mut self,instances: Handle<Buffer>,material: Handle<Material>,mesh: Handle<Mesh>,range: Range<u32>) {
-        let item = RenderItem::new(mesh, material, instances, range);
+    pub fn draw_mesh(&mut self,material: Handle<Material>,mesh: Handle<Mesh>) {
+        let item = RenderItem::new(mesh, material,None,None);
+        self.render_tasks.push(item);
+    }
+
+    pub fn draw_instances(&mut self,instances: Handle<Buffer>,material: Handle<Material>,mesh: Handle<Mesh>,range: Range<u32>) {
+        let item = RenderItem::new(mesh, material, Some(instances), Some(range));
         self.render_tasks.push(item);
     }
 
@@ -55,10 +58,19 @@ impl Frame {
         self.compute_tasks.push(task);
     }
 
+    pub fn sort_by_material(&mut self) {
+        self.render_tasks.sort_by_key(|item| {
+            item.material.index
+        });
+    }
+    pub fn sort_by_mesh(&mut self) {
+        self.render_tasks.sort_by_key(|item| {
+            item.mesh.index
+        });
+    }
     pub fn sort(&mut self) {
         self.render_tasks.sort_by_key(|item| {
             (
-               // item.pipeline.index,
                 item.material.index,
                 item.mesh.index,
             )

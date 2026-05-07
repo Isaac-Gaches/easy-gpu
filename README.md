@@ -1,9 +1,9 @@
 # easy-gpu
-A simple wgpu wrapper to help manage rendering assets and remove boilerplate code from projects.
+A simple wgpu wrapper to help manage rendering and compute assets and remove boilerplate code from projects.
 
 ## Usage
 
-example of a simple renderer with a camera and two quads
+Example of a simple renderer with a camera and two quads
 ```rust
 let mut egpu = pollster::block_on(easy_gpu::Renderer::new(window.clone()));
 
@@ -47,12 +47,12 @@ let instance_buffer = egpu.create_buffer_with_contents(
     bytemuck::cast_slice(instances.as_slice())
 );
 ```
-example usage of the above renderer
+Usage of the above renderer
 
 ```rust
 let frame = egpu.begin_frame();
 
-frame.draw(
+frame.draw_instances(
     instance_buffer,
     material,
     mesh,

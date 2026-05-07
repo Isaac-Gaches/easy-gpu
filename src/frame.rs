@@ -6,12 +6,14 @@ use crate::assets::compute::task::ComputeTask;
 use crate::assets_manager::handle::Handle;
 use crate::assets::render::material::Material;
 use crate::assets::render::mesh::Mesh;
+use crate::assets::Texture;
 
 pub(crate) struct RenderItem {
     pub mesh: Handle<Mesh>,
     pub material: Handle<Material>,
     pub instances: Option<Handle<Buffer>>,
-    pub range: Option<Range<u32>>
+    pub range: Option<Range<u32>>,
+
 }
 
 impl RenderItem {
@@ -28,6 +30,7 @@ impl RenderItem {
 pub struct Frame {
     pub(crate) render_tasks: Vec<RenderItem>,
     pub(crate) compute_tasks: Vec<ComputeTask>,
+    pub(crate) textures_to_clear: Vec<Handle<Texture>>,
 }
 
 impl Frame {
@@ -35,6 +38,7 @@ impl Frame {
         Self {
             render_tasks: Vec::new(),
             compute_tasks: Vec::new(),
+            textures_to_clear: vec![],
         }
     }
 
@@ -75,5 +79,9 @@ impl Frame {
                 item.mesh.index,
             )
         });
+    }
+
+    pub fn request_texture_clear(&mut self, texture: Handle<Texture>){
+        self.textures_to_clear.push(texture);
     }
 }

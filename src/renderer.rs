@@ -24,8 +24,6 @@ pub struct Renderer {
     depth_view: Option<wgpu::TextureView>,
 
     frame: Frame,
-
-    textures_to_clear: Vec<Handle<Texture>>,
 }
 
 impl Renderer {
@@ -73,7 +71,6 @@ impl Renderer {
             depth_texture: None,
             depth_view: None,
             frame,
-            textures_to_clear: vec![],
         }
     }
 
@@ -116,7 +113,7 @@ impl Renderer {
             },
         );
 
-        for texture in self.textures_to_clear.drain(..){
+        for texture in self.frame.textures_to_clear.drain(..){
             let view = &self.asset_manager.textures.get(texture).unwrap().view;
 
             let _rpass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
@@ -344,10 +341,6 @@ impl Renderer {
             },
             texture_size
         );
-    }
-
-    pub fn clear_texture(&mut self, texture: Handle<Texture>){
-        self.textures_to_clear.push(texture);
     }
 }
 

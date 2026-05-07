@@ -1,6 +1,6 @@
 use std::sync::Arc;
 use image::GenericImageView;
-use wgpu::{BufferUsages, Device, Queue, ShaderModule, StoreOp, Surface, SurfaceConfiguration, TextureDimension};
+use wgpu::{BufferUsages, Device, Extent3d, Queue, ShaderModule, StoreOp, Surface, SurfaceConfiguration, TextureDimension};
 use winit::dpi::PhysicalSize;
 use winit::window::Window;
 use crate::{frame::Frame};
@@ -9,7 +9,6 @@ use crate::assets::render::mesh::Mesh;
 use crate::assets::Texture;
 use crate::assets::vertex_layout::GpuVertex;
 use crate::assets_manager::asset_manager::AssetManager;
-use crate::assets_manager::asset_registry::AssetRegistry;
 use crate::assets_manager::handle::Handle;
 use crate::wgpu::TextureFormat;
 
@@ -19,7 +18,6 @@ pub struct Renderer {
     surface: Surface<'static>,
     pub(crate)surface_config: SurfaceConfiguration,
 
-    pub asset_registry: AssetRegistry,
     pub asset_manager: AssetManager,
 
     pub(crate)depth_texture: Option<wgpu::Texture>,
@@ -61,7 +59,6 @@ impl Renderer {
         surface.configure(&device, &surface_config);
 
         let asset_manager = AssetManager::new();
-        let asset_registry = AssetRegistry::new();
 
         let frame = Frame::new();
 
@@ -70,7 +67,6 @@ impl Renderer {
             queue,
             surface,
             surface_config,
-            asset_registry,
             asset_manager,
             depth_texture: None,
             depth_view: None,
@@ -299,6 +295,26 @@ impl Renderer {
         let view = texture.create_view(&wgpu::TextureViewDescriptor::default());
 
         self.asset_manager.textures.insert(Texture::new(texture,view))
+    }
+
+    pub fn write_texture(&self,texture: Handle<Texture>,bytes: &[u8],byte_per_pixel: u32, texture_size: Extent3d){
+        let texture = &self.asset_manager.textures.get(texture).unwrap().texture;
+
+        self.queue.write_texture(
+            wgpu::TexelCopyTextureInfo{
+                texture,
+                mip_level: 0,
+                origin: wgpu::Origin3d::ZERO,
+                aspect: wgpu::TextureAspect::All,
+            },
+            bytes,
+            wgpu::TexelCopyBufferLayout{
+                offset: 0,
+                bytes_per_row: Some(byte_per_pixel * texture_size.width),
+                rows_per_image: Some(texture_size.height),
+            },
+            texture_size
+        );
     }
 }
 

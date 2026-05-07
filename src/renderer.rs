@@ -1,6 +1,6 @@
 use std::sync::Arc;
 use image::GenericImageView;
-use wgpu::{BufferUsages, Device, Extent3d, Queue, ShaderModule, StoreOp, Surface, SurfaceConfiguration, TextureDimension};
+use wgpu::{BufferUsages, Color, Device, Extent3d, Queue, ShaderModule, StoreOp, Surface, SurfaceConfiguration, TextureDimension};
 use winit::dpi::PhysicalSize;
 use winit::window::Window;
 use crate::{frame::Frame};
@@ -24,6 +24,8 @@ pub struct Renderer {
     depth_view: Option<wgpu::TextureView>,
 
     frame: Frame,
+
+    clear_colour: Color,
 }
 
 impl Renderer {
@@ -71,7 +73,18 @@ impl Renderer {
             depth_texture: None,
             depth_view: None,
             frame,
+            clear_colour: wgpu::Color::BLACK,
         }
+    }
+
+    pub fn clear_colour(mut self,r: f64,g: f64,b: f64,a: f64) -> Self{
+        self.clear_colour = Color{
+            r,
+            g,
+            b,
+            a,
+        };
+        self
     }
 
     pub fn render(&mut self) {
@@ -81,7 +94,6 @@ impl Renderer {
                 // still usable, but should reconfigure soon
                 frame
             }
-
             wgpu::CurrentSurfaceTexture::Timeout => {
                 return; // skip frame
             }
@@ -152,13 +164,8 @@ impl Renderer {
                     depth_slice: None,
                     resolve_target: None,
                     ops: wgpu::Operations {
-                        load: wgpu::LoadOp::Clear(wgpu::Color {
-                            r: 0.0,
-                            g: 0.0,
-                            b: 0.0,
-                            a: 1.0,
-                        }),
-                        store: wgpu::StoreOp::Store,
+                        load: wgpu::LoadOp::Clear(self.clear_colour),
+                        store: StoreOp::Store,
                     },
                 })],
                 depth_stencil_attachment: self.depth_view.as_ref().map(|view| wgpu::RenderPassDepthStencilAttachment {
@@ -255,7 +262,6 @@ impl Renderer {
         self.depth_view = Some(view);
         self.depth_texture = Some(texture);
     }
-
 
     pub fn create_buffer(&mut self,buffer_usages: BufferUsages,size:u64) -> Handle<Buffer> {
         let buffer = Buffer::new(&self.device,size,buffer_usages);

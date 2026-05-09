@@ -75,13 +75,13 @@ pub fn storage(binding: u32,read_only: bool) -> wgpu::BindGroupLayoutEntry {
     }
 }
 
-pub fn storage_texture(binding: u32) -> wgpu::BindGroupLayoutEntry {
+pub fn storage_texture(binding: u32,format: TextureFormat) -> wgpu::BindGroupLayoutEntry {
     wgpu::BindGroupLayoutEntry {
         binding,
         visibility: wgpu::ShaderStages::COMPUTE,
         ty: wgpu::BindingType::StorageTexture {
             access: StorageTextureAccess::WriteOnly,
-            format: TextureFormat::Rgba8Unorm,
+            format,
             view_dimension: TextureViewDimension::D2,
         },
         count: None,

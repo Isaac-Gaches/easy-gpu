@@ -47,9 +47,15 @@ impl Renderer {
 
         let caps = surface.get_capabilities(&adapter);
 
+        let surface_format = caps.formats
+            .iter()
+            .copied()
+            .find(|f| f.is_srgb())
+            .unwrap_or(caps.formats[0]);
+
         let surface_config = SurfaceConfiguration {
             usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
-            format: caps.formats[0],
+            format: surface_format,
             width: window.inner_size().width,
             height: window.inner_size().height,
             present_mode: caps.present_modes[0],

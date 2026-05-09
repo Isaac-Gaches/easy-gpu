@@ -138,7 +138,7 @@ impl<'a> RenderPipelineBuilder<'a> {
                     wgpu::DepthStencilState {
                         format,
                         depth_write_enabled: Option::from(self.depth_writes_enabled),
-                        depth_compare: Option::from(wgpu::CompareFunction::LessEqual),
+                        depth_compare: Option::from(wgpu::CompareFunction::Less),
                         stencil: Default::default(),
                         bias: Default::default(),
                     }

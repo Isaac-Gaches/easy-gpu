@@ -58,7 +58,11 @@ impl Renderer {
             format: surface_format,
             width: window.inner_size().width,
             height: window.inner_size().height,
-            present_mode: caps.present_modes[0],
+            present_mode: if caps.present_modes.contains(&wgpu::PresentMode::Mailbox) {
+                wgpu::PresentMode::Mailbox
+            } else {
+                wgpu::PresentMode::Fifo
+            },
             alpha_mode: caps.alpha_modes[0],
             view_formats: vec![],
             desired_maximum_frame_latency: 2,

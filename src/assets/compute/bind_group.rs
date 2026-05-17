@@ -11,6 +11,7 @@ pub struct ComputeBindGroup{
 pub struct ComputeBindGroupBuilder{
     textures: Vec<(u32, Handle<Texture>)>,
     storages: Vec<(u32,Handle<Buffer>)>,
+    uniforms: Vec<(u32,Handle<Buffer>)>,
     pipeline: Handle<ComputePipeline>,
 }
 
@@ -19,6 +20,7 @@ impl ComputeBindGroupBuilder{
         Self{
             textures: vec![],
             storages: vec![],
+            uniforms: vec![],
             pipeline,
         }
     }
@@ -39,11 +41,28 @@ impl ComputeBindGroupBuilder{
         self.storages.push((binding, buffer));
         self
     }
+    pub fn uniform(
+        mut self,
+        binding: u32,
+        buffer: Handle<Buffer>,
+    ) -> Self {
+        self.storages.push((binding, buffer));
+        self
+    }
 
     pub fn build(&self,renderer: &mut Renderer) -> Handle<ComputeBindGroup> {
         let pipeline = renderer.asset_manager.compute_pipelines.get(self.pipeline).unwrap();
 
         let mut entries = Vec::new();
+
+        for (binding,handle) in &self.uniforms {
+            let uniform = renderer.asset_manager.buffers.get(*handle).unwrap();
+
+            entries.push(wgpu::BindGroupEntry {
+                binding:*binding,
+                resource: uniform.buffer.as_entire_binding(),
+            });
+        }
 
         for (binding,handle) in &self.storages {
             let storage = renderer.asset_manager.buffers.get(*handle).unwrap();

@@ -53,9 +53,9 @@ impl Frame {
     pub fn draw_batch<T: GpuInstance>(&mut self,instance: &[T],material: Handle<Material>,mesh: Handle<Mesh>){
         let instance_count = instance.len() as u32;
         let start = self.instance_bytes.len();
-        self.instance_bytes.extend_from_slice(bytes_of(&instance));
+        self.instance_bytes.extend_from_slice(bytemuck::cast_slice(&instance));
         let end = self.instance_bytes.len();
-        let instance_range = start as u32..end as u32;
+        let instance_range = start as u64..end as u64;
 
         let item = RenderTask::DrawInstanced(InstancedCommand{
             mesh,
@@ -73,20 +73,50 @@ impl Frame {
 
     pub fn sort_by_material(&mut self) {
         self.render_tasks.sort_by_key(|item| {
-            item.material.index
+            match item {
+                RenderTask::Draw(cmd) =>{
+                    cmd.material.index
+                }
+                RenderTask::DrawInstanced(cmd) =>{
+                    cmd.material.index
+                }
+                RenderTask::DrawStreamed(cmd) =>{
+                    cmd.material.index
+                }
+            }
         });
     }
     pub fn sort_by_mesh(&mut self) {
         self.render_tasks.sort_by_key(|item| {
-            item.mesh.index
+            match item {
+                RenderTask::Draw(cmd) =>{
+                    cmd.mesh.index
+                }
+                RenderTask::DrawInstanced(cmd) =>{
+                    cmd.mesh.index
+                }
+                RenderTask::DrawStreamed(cmd) =>{
+                    cmd.mesh.index
+                }
+            }
         });
     }
     pub fn sort(&mut self) {
         self.render_tasks.sort_by_key(|item| {
-            (
-                item.material.index,
-                item.mesh.index,
-            )
+            match item {
+                RenderTask::Draw(cmd) =>{
+                   (cmd.material.index,
+                    cmd.mesh.index)
+                }
+                RenderTask::DrawInstanced(cmd) =>{
+                    (cmd.material.index,
+                     cmd.mesh.index)
+                }
+                RenderTask::DrawStreamed(cmd) =>{
+                    (cmd.material.index,
+                     cmd.mesh.index)
+                }
+            }
         });
     }
 

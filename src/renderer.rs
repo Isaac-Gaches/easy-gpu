@@ -7,10 +7,10 @@ use crate::{frame::Frame};
 use crate::assets::buffer::Buffer;
 use crate::assets::render::mesh::Mesh;
 use crate::assets::{Material, Texture};
+use crate::assets::render::task::RenderTask;
 use crate::assets::vertex_layout::GpuVertex;
 use crate::assets_manager::asset_manager::AssetManager;
 use crate::assets_manager::handle::Handle;
-use crate::frame::RenderTask;
 use crate::wgpu::TextureFormat;
 
 pub struct Renderer {
@@ -212,7 +212,7 @@ impl Renderer {
                         self.bind_material(cmd.material,&mut current_material,&mut render_pass);
                         let mesh = self.bind_mesh(cmd.mesh,&mut current_mesh,&mut render_pass);
 
-                        render_pass.set_vertex_buffer(1, instance_buffer.slice(cmd.instance_range.clone()));
+                        render_pass.set_vertex_buffer(1, instance_buffer.buffer.slice(cmd.instance_range.clone()));
 
                         render_pass.draw_indexed(0..mesh.index_count, 0,0..cmd.instance_count);
                     }
@@ -227,7 +227,7 @@ impl Renderer {
                                 render_pass.set_vertex_buffer((i+1) as u32, instances.buffer.slice(..));
                             }
 
-                            render_pass.draw_indexed(0..mesh.index_count, 0,cmd.range.clone().unwrap());
+                            render_pass.draw_indexed(0..mesh.index_count, 0,cmd.range.clone());
                         }
                     }
                 }
@@ -241,7 +241,7 @@ impl Renderer {
 
     fn bind_mesh(&self, mesh_handle: Handle<Mesh>,current: &mut Option<Handle<Mesh>>,render_pass: &mut RenderPass<'_>) -> &Mesh{
         let mesh = self.asset_manager.meshes.get(mesh_handle).unwrap();
-        if Some(mesh) != *current{
+        if Some(mesh_handle) != *current{
             *current = Some(mesh_handle);
             render_pass.set_vertex_buffer(0, mesh.vertex_buffer.slice(..));
             render_pass.set_index_buffer(mesh.index_buffer.slice(..), wgpu::IndexFormat::Uint16);

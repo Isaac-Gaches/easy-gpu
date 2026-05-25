@@ -11,7 +11,7 @@ pub enum RenderTask {
 pub(crate) struct InstancedCommand {
     pub mesh: Handle<Mesh>,
     pub material: Handle<Material>,
-    pub instance_range: Range<u32>,
+    pub instance_range: Range<u64>,
     pub instance_count: u32,
 }
 

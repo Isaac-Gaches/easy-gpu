@@ -1,15 +1,16 @@
 use std::sync::Arc;
 use image::GenericImageView;
-use wgpu::{BufferUsages, Color, Device, Extent3d, Queue, ShaderModule, StoreOp, Surface, SurfaceConfiguration, TextureDimension};
+use wgpu::{BufferUsages, Color, Device, Extent3d, Queue, RenderPass, ShaderModule, StoreOp, Surface, SurfaceConfiguration, TextureDimension};
 use winit::dpi::PhysicalSize;
 use winit::window::Window;
 use crate::{frame::Frame};
 use crate::assets::buffer::Buffer;
 use crate::assets::render::mesh::Mesh;
-use crate::assets::Texture;
+use crate::assets::{Material, Texture};
 use crate::assets::vertex_layout::GpuVertex;
 use crate::assets_manager::asset_manager::AssetManager;
 use crate::assets_manager::handle::Handle;
+use crate::frame::RenderTask;
 use crate::wgpu::TextureFormat;
 
 pub struct Renderer {
@@ -17,15 +18,12 @@ pub struct Renderer {
     queue: Queue,
     surface: Surface<'static>,
     pub(crate)surface_config: SurfaceConfiguration,
-
     pub asset_manager: AssetManager,
-
     pub(crate)depth_texture: Option<wgpu::Texture>,
     depth_view: Option<wgpu::TextureView>,
-
     frame: Frame,
-
     clear_colour: Color,
+    instance_buffer: Handle<Buffer>,
 }
 
 impl Renderer {
@@ -70,9 +68,12 @@ impl Renderer {
 
         surface.configure(&device, &surface_config);
 
-        let asset_manager = AssetManager::new();
+        let mut asset_manager = AssetManager::new();
 
         let frame = Frame::new();
+
+        let instance_buffer = Buffer::new(&device,262144,BufferUsages::VERTEX | BufferUsages::COPY_DST);
+        let instance_buffer = asset_manager.buffers.insert(instance_buffer);
 
         Self {
             device,
@@ -83,7 +84,8 @@ impl Renderer {
             depth_texture: None,
             depth_view: None,
             frame,
-            clear_colour: wgpu::Color::BLACK,
+            clear_colour: Color::BLACK,
+            instance_buffer,
         }
     }
 
@@ -165,6 +167,9 @@ impl Renderer {
             compute_task.execute(&mut encoder, &self.asset_manager)
         }
 
+        let instance_buffer = self.asset_manager.buffers.get(self.instance_buffer).unwrap();
+        self.queue.write_buffer(&instance_buffer.buffer, 0, self.frame.instance_bytes.as_slice());
+
         {
             let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
                 label: Some("Render Pass"),
@@ -194,39 +199,79 @@ impl Renderer {
             let mut current_material = None;
             let mut current_mesh = None;
 
-            for item in &self.frame.render_tasks {
-                if Some(item.material) != current_material{
-                    current_material = Some(item.material);
-                    let material = self.asset_manager.materials.get(item.material).unwrap();
-                    let pipeline = self.asset_manager.render_pipelines.get(material.pipeline).unwrap();
+            for render_task in &self.frame.render_tasks {
+                match render_task {
+                    RenderTask::Draw(cmd) => {
+                        self.bind_material(cmd.material,&mut current_material,&mut render_pass);
+                        let mesh = self.bind_mesh(cmd.mesh,&mut current_mesh,&mut render_pass);
 
-                    render_pass.set_pipeline(&pipeline.pipeline);
-                    render_pass.set_bind_group(0, &material.bind_group, &[]);
+                        render_pass.draw_indexed(0..mesh.index_count, 0,0..1);
+                    }
+
+                    RenderTask::DrawInstanced(cmd) => {
+                        self.bind_material(cmd.material,&mut current_material,&mut render_pass);
+                        let mesh = self.bind_mesh(cmd.mesh,&mut current_mesh,&mut render_pass);
+
+                        render_pass.set_vertex_buffer(1, instance_buffer.slice(cmd.instance_range.clone()));
+
+                        render_pass.draw_indexed(0..mesh.index_count, 0,0..cmd.instance_count);
+                    }
+
+                    RenderTask::DrawStreamed(cmd) => {
+                        if cmd.instances.len() > 0{
+                            self.bind_material(cmd.material,&mut current_material,&mut render_pass);
+                            let mesh = self.bind_mesh(cmd.mesh,&mut current_mesh,&mut render_pass);
+
+                            for (i,instance) in (&cmd.instances).into_iter().enumerate(){
+                                let instances = self.asset_manager.buffers.get(*instance).unwrap();
+                                render_pass.set_vertex_buffer((i+1) as u32, instances.buffer.slice(..));
+                            }
+
+                            render_pass.draw_indexed(0..mesh.index_count, 0,cmd.range.clone().unwrap());
+                        }
+                    }
                 }
-
-                let mesh = self.asset_manager.meshes.get(item.mesh).unwrap();
-                if Some(item.mesh) != current_mesh{
-                    current_mesh = Some(item.mesh);
-                    render_pass.set_vertex_buffer(0, mesh.vertex_buffer.slice(..));
-                    render_pass.set_index_buffer(mesh.index_buffer.slice(..), wgpu::IndexFormat::Uint16);
-                }
-
-                if let Some(instances) = item.instances{
-                    let instances = self.asset_manager.buffers.get(instances).unwrap();
-                    render_pass.set_vertex_buffer(1, instances.buffer.slice(..));
-                    render_pass.draw_indexed(0..mesh.index_count, 0,item.range.clone().unwrap());
-                }
-                else{
-                    render_pass.draw_indexed(0..mesh.index_count, 0,0..1);
-                }
-
-
             }
         }
 
         self.queue.submit(Some(encoder.finish()));
 
         output.present();
+    }
+
+    fn bind_mesh(&self, mesh_handle: Handle<Mesh>,current: &mut Option<Handle<Mesh>>,render_pass: &mut RenderPass<'_>) -> &Mesh{
+        let mesh = self.asset_manager.meshes.get(mesh_handle).unwrap();
+        if Some(mesh) != *current{
+            *current = Some(mesh_handle);
+            render_pass.set_vertex_buffer(0, mesh.vertex_buffer.slice(..));
+            render_pass.set_index_buffer(mesh.index_buffer.slice(..), wgpu::IndexFormat::Uint16);
+        }
+        mesh
+    }
+    fn bind_material(
+        &self,
+        material: Handle<Material>,
+        current: &mut Option<Handle<Material>>,
+        render_pass: &mut RenderPass<'_>,
+    ) {
+        if Some(material) != *current {
+            *current = Some(material);
+
+            let material_asset = self
+                .asset_manager
+                .materials
+                .get(material)
+                .unwrap();
+
+            let pipeline = self
+                .asset_manager
+                .render_pipelines
+                .get(material_asset.pipeline)
+                .unwrap();
+
+            render_pass.set_pipeline(&pipeline.pipeline);
+            render_pass.set_bind_group(0, &material_asset.bind_group, &[]);
+        }
     }
 
     pub fn resize_surface(&mut self, size: PhysicalSize<u32>) {

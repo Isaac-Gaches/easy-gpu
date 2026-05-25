@@ -30,6 +30,7 @@ impl Frame {
     pub(crate) fn clear(&mut self) {
         self.render_tasks.clear();
         self.compute_tasks.clear();
+        self.instance_bytes.clear();
     }
 
     pub fn draw(&mut self,material: Handle<Material>,mesh: Handle<Mesh>) {

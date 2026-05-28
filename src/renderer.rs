@@ -350,6 +350,11 @@ impl Renderer {
         let uniform = self.asset_manager.buffers.get(handle).unwrap();
         self.queue.write_buffer(&uniform.buffer, 0, bytemuck::cast_slice(&[data]));
     }
+
+    pub fn write_array_buffer<T: bytemuck::Pod>(&self,handle: Handle<Buffer>,data: &[T]){
+        let uniform = self.asset_manager.buffers.get(handle).unwrap();
+        self.queue.write_buffer(&uniform.buffer, 0, bytemuck::cast_slice(data));
+    }
     pub fn load_texture_from_file(&mut self,texture_bytes: Vec<u8>) -> Handle<Texture> {
         let image = image::load_from_memory(texture_bytes.as_slice()).unwrap();
         let rgba = image.to_rgba8();

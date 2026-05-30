@@ -12,7 +12,7 @@ pub struct Material {
 pub struct MaterialBuilder {
     textures: Vec<(u32, Handle<Texture>)>,
     samplers: Vec<(u32,Handle<Sampler>)>,
-    uniforms: Vec<(u32,Handle<Buffer>)>,
+    buffers: Vec<(u32,Handle<Buffer>)>,
     pipeline: Handle<RenderPipeline>,
 }
 
@@ -23,7 +23,7 @@ impl MaterialBuilder {
         Self {
             textures: Vec::new(),
             samplers: Vec::new(),
-            uniforms: Vec::new(),
+            buffers: Vec::new(),
             pipeline,
         }
     }
@@ -46,12 +46,12 @@ impl MaterialBuilder {
         self
     }
 
-    pub fn uniform(
+    pub fn buffer(
         mut self,
         binding: u32,
         buffer: Handle<Buffer>,
     ) -> Self {
-        self.uniforms.push((binding, buffer));
+        self.buffers.push((binding, buffer));
         self
     }
 
@@ -60,11 +60,11 @@ impl MaterialBuilder {
 
         let mut entries = Vec::new();
 
-        for (binding,handle) in &self.uniforms {
-            let uniform = renderer.asset_manager.buffers.get(*handle).unwrap();
+        for (binding,handle) in &self.buffers {
+            let buffer = renderer.asset_manager.buffers.get(*handle).unwrap();
             entries.push(wgpu::BindGroupEntry {
                 binding:*binding,
-                resource: uniform.buffer.as_entire_binding(),
+                resource: buffer.buffer.as_entire_binding(),
             });
         }
 

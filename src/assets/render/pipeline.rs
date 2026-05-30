@@ -179,7 +179,19 @@ pub fn sampler(binding: u32) -> wgpu::BindGroupLayoutEntry {
     }
 }
 
-pub fn uniform(binding: u32) -> wgpu::BindGroupLayoutEntry {
+pub fn render_storage(binding: u32, read_only: bool) -> wgpu::BindGroupLayoutEntry {
+    wgpu::BindGroupLayoutEntry {
+        binding,
+        visibility: wgpu::ShaderStages::VERTEX_FRAGMENT,
+        ty: wgpu::BindingType::Buffer {
+            ty: BufferBindingType::Storage {read_only},
+            has_dynamic_offset: false,
+            min_binding_size: None,
+        },
+        count: None,
+    }
+}
+pub fn render_uniform(binding: u32) -> wgpu::BindGroupLayoutEntry {
     wgpu::BindGroupLayoutEntry {
         binding,
         visibility: wgpu::ShaderStages::VERTEX_FRAGMENT,

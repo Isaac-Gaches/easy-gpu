@@ -10,17 +10,15 @@ pub struct ComputeBindGroup{
 
 pub struct ComputeBindGroupBuilder{
     textures: Vec<(u32, Handle<Texture>)>,
-    storages: Vec<(u32,Handle<Buffer>)>,
-    uniforms: Vec<(u32,Handle<Buffer>)>,
+    buffers: Vec<(u32,Handle<Buffer>)>,
     pipeline: Handle<ComputePipeline>,
 }
 
 impl ComputeBindGroupBuilder{
     pub fn new(pipeline: Handle<ComputePipeline>) -> Self{
         Self{
-            textures: vec![],
-            storages: vec![],
-            uniforms: vec![],
+            textures: Vec::new(),
+            buffers: Vec::new(),
             pipeline,
         }
     }
@@ -33,20 +31,12 @@ impl ComputeBindGroupBuilder{
         self.textures.push((texture_binding, texture));
         self
     }
-    pub fn storage(
+    pub fn buffer(
         mut self,
         binding: u32,
         buffer: Handle<Buffer>,
     ) -> Self {
-        self.storages.push((binding, buffer));
-        self
-    }
-    pub fn uniform(
-        mut self,
-        binding: u32,
-        buffer: Handle<Buffer>,
-    ) -> Self {
-        self.storages.push((binding, buffer));
+        self.buffers.push((binding, buffer));
         self
     }
 
@@ -55,21 +45,12 @@ impl ComputeBindGroupBuilder{
 
         let mut entries = Vec::new();
 
-        for (binding,handle) in &self.uniforms {
-            let uniform = renderer.asset_manager.buffers.get(*handle).unwrap();
+        for (binding,handle) in &self.buffers {
+            let buffer = renderer.asset_manager.buffers.get(*handle).unwrap();
 
             entries.push(wgpu::BindGroupEntry {
                 binding:*binding,
-                resource: uniform.buffer.as_entire_binding(),
-            });
-        }
-
-        for (binding,handle) in &self.storages {
-            let storage = renderer.asset_manager.buffers.get(*handle).unwrap();
-
-            entries.push(wgpu::BindGroupEntry {
-                binding:*binding,
-                resource: storage.buffer.as_entire_binding(),
+                resource: buffer.buffer.as_entire_binding(),
             });
         }
 

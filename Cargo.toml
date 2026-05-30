@@ -1,6 +1,6 @@
 [package]
 name = "easy-gpu"
-version = "0.5.3"
+version = "0.5.4"
 edition = "2024"
 description = "wgpu wrapper to manage assets and remove boilerplate"
 license = "MIT OR Apache-2.0"

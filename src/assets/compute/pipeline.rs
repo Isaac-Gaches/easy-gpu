@@ -75,7 +75,7 @@ pub fn compute_uniform(binding: u32,) -> wgpu::BindGroupLayoutEntry {
     }
 }
 
-pub fn storage(binding: u32,read_only: bool) -> wgpu::BindGroupLayoutEntry {
+pub fn compute_storage(binding: u32,read_only: bool) -> wgpu::BindGroupLayoutEntry {
     wgpu::BindGroupLayoutEntry {
         binding,
         visibility: wgpu::ShaderStages::COMPUTE,

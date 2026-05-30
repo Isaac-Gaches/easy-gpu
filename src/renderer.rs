@@ -72,7 +72,7 @@ impl Renderer {
 
         let frame = Frame::new();
 
-        let instance_buffer = Buffer::new(&device,262144,BufferUsages::VERTEX | BufferUsages::COPY_DST);
+        let instance_buffer = Buffer::new(&device,4194304,BufferUsages::VERTEX | BufferUsages::COPY_DST);
         let instance_buffer = asset_manager.buffers.insert(instance_buffer);
 
         Self {

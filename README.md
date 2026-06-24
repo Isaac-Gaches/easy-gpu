@@ -37,7 +37,7 @@ let material = MaterialBuilder::new(pipeline)
     .uniform(0,camera_buffer)
     .build(&mut egpu);
 
-let instances = vec![
+let instances = [
     Instance::new(0.,0.)
     Instance::new(1.,0.)
 ];
@@ -48,9 +48,9 @@ Usage of the above renderer
 let frame = egpu.begin_frame();
 
 frame.draw_batch(
-    instances.as_slice(),
+    &instances,
     material,
-    sprite_batch_engine.quad_mesh
+    mesh
 )
 
 egpu.render();

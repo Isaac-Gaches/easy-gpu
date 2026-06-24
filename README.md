@@ -41,22 +41,16 @@ let instances = vec![
     Instance::new(0.,0.)
     Instance::new(1.,0.)
 ];
-
-let instance_buffer = egpu.create_buffer_with_contents(
-    BufferUsages::VERTEX | BufferUsages::STORAGE,
-    bytemuck::cast_slice(instances.as_slice())
-);
 ```
 Usage of the above renderer
 
 ```rust
 let frame = egpu.begin_frame();
 
-frame.draw_instances(
-    instance_buffer,
+frame.draw_batch(
+    instances.as_slice(),
     material,
-    mesh,
-    0..2
-);
+    sprite_batch_engine.quad_mesh
+)
 
 egpu.render();

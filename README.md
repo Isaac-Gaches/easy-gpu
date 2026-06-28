@@ -27,10 +27,10 @@ let camera_buffer = egpu.create_buffer_with_contents(
 
 let shader = egpu.load_shader(include_str!("shader.wgsl"));
 
-let pipeline = RenderPipelineBuilder::new(shader.clone())
+let pipeline = RenderPipelineBuilder::new(shader)
     .vertex_layout(Vertex::buffer_layout())
     .vertex_layout(Instance::buffer_layout())
-    .material_layout(&[uniform(0)])
+    .material_layout(&[render_uniform(0)])
     .build(&mut egpu);
 
 let material = MaterialBuilder::new(pipeline)
@@ -54,3 +54,31 @@ frame.draw_batch(
 )
 
 egpu.render();
+```
+Example compute setup and execution.
+
+```rust
+let nums = [1,2,3,4,5,6,7,8,9];
+
+let buffer = egpu.create_buffer_with_contents(
+    BufferUsages::STORAGE,
+    bytemuch::cast_slice(&nums)
+);
+
+let compute_pipeline = ComputePipelineBuilder::new(shader)
+    .bind_group_layout(&[
+        buffer(0),
+    ])
+    .build(egpu);
+
+let bind_group = ComputeBindGroupBuilder::new(compute_pipeline)
+    .buffer(0,buffer)
+    .build(egpu);
+
+//usage
+
+frame.compute(
+    bind_group,
+    compute_pipeline,
+    (1,1,1),
+);
